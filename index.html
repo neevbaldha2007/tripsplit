@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TripSplit</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <main class="container">
+
+        <header>
+            <h1>TripSplit</h1>
+            <p>Track shared expenses with your friends.</p>
+        </header>
+
+        <section class="card" aria-labelledby="trip-heading">
+            <h2 id="trip-heading">1. Name your trip</h2>
+
+            <form id="trip-form">
+                <label for="trip-name">Trip name</label>
+
+                <input
+                    type="text"
+                    id="trip-name"
+                    placeholder="Example: Goa Trip"
+                    maxlength="100"
+                    required
+                >
+
+                <button type="submit">Set trip name</button>
+            </form>
+
+            <p>
+                Current trip:
+                <strong id="current-trip">No trip selected</strong>
+            </p>
+        </section>
+
+        <section class="card" aria-labelledby="members-heading">
+            <h2 id="members-heading">2. Add members</h2>
+
+            <form id="member-form">
+                <label for="member-name">Member name</label>
+
+                <input
+                    type="text"
+                    id="member-name"
+                    placeholder="Example: Neev"
+                    maxlength="50"
+                    required
+                >
+
+                <button type="submit">Add member</button>
+            </form>
+
+            <p id="message" role="status"></p>
+
+            <h3>Members: <span id="member-count">0</span></h3>
+
+            <p id="empty-message">No members added yet.</p>
+
+            <ul id="member-list"></ul>
+        </section>
+
+    </main>
+</body>
+</html>
