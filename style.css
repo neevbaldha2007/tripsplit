@@ -1,0 +1,117 @@
+/* Include padding and borders in element widths. */
+* {
+    box-sizing: border-box;
+}
+
+/* Set the page colours and default font. */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f3f6fb;
+    color: #1f2937;
+}
+
+/* Keep the content centred and readable. */
+.container {
+    width: 92%;
+    max-width: 720px;
+    margin: 40px auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+h1 {
+    color: #1d4ed8;
+    margin-bottom: 8px;
+}
+
+/* Both sections use this same card style. */
+.card {
+    background-color: white;
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #9ca3af;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background-color: #1d4ed8;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #1e40af;
+}
+
+/* Keep keyboard focus clearly visible. */
+input:focus-visible,
+button:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+
+#message {
+    min-height: 24px;
+}
+
+#member-list {
+    list-style: none;
+    padding: 0;
+}
+
+.member-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.member-row span {
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+.remove-button {
+    background-color: #b91c1c;
+    font-size: 14px;
+}
+
+.remove-button:hover {
+    background-color: #991b1b;
+}
+
+/* Reduce spacing on narrow screens. */
+@media (max-width: 480px) {
+    .container {
+        margin: 20px auto;
+    }
+
+    .card {
+        padding: 16px;
+    }
+}
