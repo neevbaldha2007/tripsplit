@@ -115,3 +115,70 @@ button:focus-visible {
         padding: 16px;
     }
 }
+
+/* Make the payer dropdown match our text inputs. */
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #9ca3af;
+    border-radius: 6px;
+    background-color: white;
+    font-size: 16px;
+}
+
+fieldset {
+    margin: 0 0 16px;
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+legend {
+    padding: 0 6px;
+    font-weight: bold;
+}
+
+/* Put each checkbox beside its member name. */
+.participant-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+
+.participant-option input {
+    width: auto;
+    margin: 0;
+}
+
+#expense-message {
+    min-height: 24px;
+}
+
+/* Allow horizontal scrolling on small screens. */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background-color: #eff6ff;
+}
+
+td {
+    overflow-wrap: anywhere;
+}
