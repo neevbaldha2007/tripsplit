@@ -1,0 +1,452 @@
+/* ==============================================================================
+   TripSplit — Professional Modern Design System & Custom Styles
+   Colors: Slate, Clean White, Indigo / Royal Blue Accent, Emerald & Crimson Status
+   ============================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Color Palette */
+  --color-primary: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: #eff6ff;
+  --color-indigo: #4f46e5;
+  --color-indigo-dark: #3730a3;
+  --color-indigo-light: #eef2ff;
+
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-danger: #ef4444;
+  --color-danger-bg: #fef2f2;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-info: #06b6d4;
+
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  --border-color: #e2e8f0;
+  --border-focus: #93c5fd;
+
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/* Base Reset & Typography */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Navbar */
+.navbar-custom {
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  padding: 0.85rem 0;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--color-indigo) 0%, var(--color-primary) 100%);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+.brand-name {
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-indigo) 0%, var(--color-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-tagline {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Card Styling */
+.card-modern {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.card-modern:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #cbd5e1;
+}
+
+.card-interactive {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: #93c5fd;
+}
+
+/* Trip Hero Banner */
+.trip-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e40af 100%);
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 2.25rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 2rem;
+}
+
+.trip-banner::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.trip-banner-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.trip-banner-dest {
+  color: #c7d2fe;
+  font-size: 1.05rem;
+}
+
+.trip-stat-box {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.trip-stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.trip-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Custom Tabs */
+.nav-pills-custom .nav-link {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.nav-pills-custom .nav-link:hover {
+  color: var(--color-indigo);
+  background-color: var(--color-indigo-light);
+}
+
+.nav-pills-custom .nav-link.active {
+  background: linear-gradient(135deg, var(--color-indigo) 0%, var(--color-primary) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+}
+
+/* Badges */
+.badge-category {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cat-food { background: #fef3c7; color: #92400e; }
+.cat-hotel { background: #e0e7ff; color: #3730a3; }
+.cat-transport { background: #dbeafe; color: #1e40af; }
+.cat-shopping { background: #fce7f3; color: #9d174d; }
+.cat-activities { background: #ccfbf1; color: #115e59; }
+.cat-other { background: #f1f5f9; color: #475569; }
+
+/* Financial Status Badges */
+.badge-balance-pos {
+  background: var(--color-success-bg);
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+}
+
+.badge-balance-neg {
+  background: var(--color-danger-bg);
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  font-weight: 700;
+}
+
+.badge-balance-zero {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+/* Member avatar pill */
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 2px 5px rgba(99, 102, 241, 0.2);
+}
+
+/* Forms */
+.form-control, .form-select {
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.92rem;
+  color: var(--text-main);
+  transition: all 0.15s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  margin-bottom: 0.4rem;
+}
+
+/* Currency Amounts Display */
+.currency-amount {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.amount-positive {
+  color: var(--color-success);
+}
+
+.amount-negative {
+  color: var(--color-danger);
+}
+
+/* Buttons */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, var(--color-indigo) 0%, var(--color-primary) 100%);
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 1.25rem;
+  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-primary-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
+  color: #ffffff;
+}
+
+.btn-outline-custom {
+  border: 1.5px solid var(--border-color);
+  color: var(--text-main);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-custom:hover {
+  border-color: #94a3b8;
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+/* Tables */
+.table-custom {
+  margin-bottom: 0;
+}
+
+.table-custom th {
+  background-color: #f8fafc;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--border-color);
+  padding: 0.85rem 1rem;
+}
+
+.table-custom td {
+  padding: 0.9rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.92rem;
+}
+
+.table-custom tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Suggestions Card */
+.settlement-card {
+  border: 1.5px dashed #cbd5e1;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.settlement-card:hover {
+  border-color: var(--color-indigo);
+  background: var(--color-indigo-light);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+}
+
+.empty-state-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Toast Notifications */
+.toast-container-custom {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  min-width: 320px;
+  max-width: 420px;
+}
+
+.toast-custom {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid transparent;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Split Preview Box */
+.split-preview-box {
+  background: #f8fafc;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+}
+
+.split-pill {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Zero Sum Indicator */
+.ledger-balanced {
+  color: var(--color-success);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Chart Canvas container */
+.chart-container {
+  position: relative;
+  height: 280px;
+  max-width: 100%;
+}

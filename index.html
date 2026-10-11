@@ -1,122 +1,1057 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" ng-app="tripSplitApp">
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripSplit — Group Trip Expense Splitter</title>
+    <meta name="description" content="Manage group trip expenses, equal & custom splits, debt simplification settlements, and financial ledger balances.">
 
-    <title>TripSplit</title>
+    <!-- Bootstrap 5 CSS & Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css">
-
-    <script src="app.js" defer></script>
+    <!-- Custom Modern Design System -->
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
+<body ng-controller="DashboardController">
 
-<body>
-    <main class="container">
+    <!-- Top Toast Notification Component -->
+    <div class="toast-container-custom" ng-if="$root.toast.show">
+        <div class="alert alert-{{$root.toast.type}} toast-custom d-flex align-items-center justify-content-between p-3 mb-0" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi {{$root.toast.icon}} fs-5"></i>
+                <span class="fw-medium">{{$root.toast.message}}</span>
+            </div>
+            <button type="button" class="btn-close ms-3" ng-click="$root.closeToast()" aria-label="Close"></button>
+        </div>
+    </div>
 
-        <header>
-            <h1>TripSplit</h1>
-            <p>Track shared expenses with your friends.</p>
-        </header>
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#" ng-click="selectedTrip = null">
+                <span class="brand-badge"><i class="bi bi-compass"></i></span>
+                <div>
+                    <div class="brand-name">TripSplit</div>
+                    <div class="brand-tagline">Group Expense Manager</div>
+                </div>
+            </a>
 
-        <section class="card" aria-labelledby="trip-heading">
-            <h2 id="trip-heading">1. Name your trip</h2>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <button type="button" class="btn btn-outline-custom btn-sm px-3" ng-if="selectedTrip" ng-click="selectedTrip = null">
+                    <i class="bi bi-grid-fill me-1"></i> Dashboard
+                </button>
+                <button type="button" class="btn btn-primary-gradient btn-sm px-3" data-bs-toggle="modal" data-bs-target="#newTripModal">
+                    <i class="bi bi-plus-circle me-1"></i> New Trip
+                </button>
+            </div>
+        </div>
+    </nav>
 
-            <form id="trip-form">
-                <label for="trip-name">Trip name</label>
+    <!-- MAIN APP CONTAINER -->
+    <main class="container py-4">
 
-                <input type="text" id="trip-name" placeholder="Example: Goa Trip" maxlength="100" required>
+        <!-- ===================================================================
+             VIEW 1: DASHBOARD (When no trip is currently open)
+             =================================================================== -->
+        <section id="dashboard-view" ng-if="!selectedTrip">
+            <!-- Welcome Header -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Trip Dashboard</h1>
+                    <p class="text-muted mb-0">Track group spending, manage participants, and settle debts seamlessly.</p>
+                </div>
+                <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fs-6 fw-semibold">
+                    <i class="bi bi-airplane-engines me-1"></i> {{trips.length}} {{trips.length === 1 ? 'Trip' : 'Trips'}} Registered
+                </div>
+            </div>
 
-                <button type="submit">Set trip name</button>
-            </form>
+            <!-- Loading Spinner -->
+            <div class="text-center py-5" ng-if="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading trips...</span>
+                </div>
+                <p class="text-muted mt-2">Loading your trips...</p>
+            </div>
 
-            <p>
-                Current trip:
-                <strong id="current-trip">No trip selected</strong>
-            </p>
-        </section>
+            <!-- Empty State -->
+            <div class="card-modern empty-state" ng-if="!loading && trips.length === 0">
+                <div class="empty-state-icon">
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+                <h2 class="h5 fw-bold mb-2">No Trips Created Yet</h2>
+                <p class="text-muted max-w-md mx-auto mb-4">
+                    Ready to hit the road? Create your first group trip, add your friends, and effortlessly split vacation expenses!
+                </p>
+                <button type="button" class="btn btn-primary-gradient px-4 py-2" data-bs-toggle="modal" data-bs-target="#newTripModal">
+                    <i class="bi bi-plus-lg me-1"></i> Create Your First Trip
+                </button>
+            </div>
 
-        <section class="card" aria-labelledby="members-heading">
-            <h2 id="members-heading">2. Add members</h2>
+            <!-- Trips Grid -->
+            <div class="row g-4" ng-if="!loading && trips.length > 0">
+                <div class="col-md-6 col-lg-4" ng-repeat="trip in trips track by trip.id">
+                    <div class="card-modern card-interactive h-100 p-4 d-flex flex-column" ng-click="openTrip(trip.id, $event)">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-indigo-subtle text-indigo px-2 py-1 rounded" style="background:#e0e7ff; color:#3730a3; font-weight:600;">
+                                <i class="bi bi-geo-alt-fill me-1"></i> {{trip.destination}}
+                            </span>
+                            <div class="dropdown" ng-click="$event.stopPropagation()">
+                                <button class="btn btn-sm btn-light border-0 rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li>
+                                        <a class="dropdown-menu-item dropdown-item" href="#" ng-click="openEditTripModal(trip, $event)">
+                                            <i class="bi bi-pencil me-2 text-primary"></i> Edit Trip
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-menu-item dropdown-item text-danger" href="#" ng-click="confirmDeleteTrip(trip, $event)">
+                                            <i class="bi bi-trash3 me-2"></i> Delete Trip
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
 
-            <form id="member-form">
-                <label for="member-name">Member name</label>
+                        <h3 class="h5 fw-bold mb-1 text-truncate" title="{{trip.name}}">{{trip.name}}</h3>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            <span ng-if="trip.start_date">{{trip.start_date | readableDate}}</span>
+                            <span ng-if="trip.end_date"> — {{trip.end_date | readableDate}}</span>
+                            <span ng-if="!trip.start_date && !trip.end_date">Flexible Dates</span>
+                        </p>
 
-                <input type="text" id="member-name" placeholder="Example: Neev" maxlength="50" required>
+                        <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small text-uppercase fw-semibold" style="font-size:0.7rem;">Total Spend</div>
+                                <div class="fs-5 fw-bold text-dark font-monospace">{{trip.total_expenses_rupees | inr}}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-secondary border px-2 py-1">
+                                    <i class="bi bi-people-fill me-1"></i> {{trip.member_count}} {{trip.member_count == 1 ? 'Friend' : 'Friends'}}
+                                </span>
+                            </div>
+                        </div>
 
-                <button type="submit">Add member</button>
-            </form>
-
-            <p id="message" role="status"></p>
-
-            <h3>Members: <span id="member-count">0</span></h3>
-
-            <p id="empty-message">No members added yet.</p>
-
-            <ul id="member-list"></ul>
-        </section>
-        <section class="card" aria-labelledby="expense-heading">
-            <h2 id="expense-heading">3. Add an expense</h2>
-
-            <form id="expense-form">
-                <label for="expense-description">Description</label>
-
-                <input type="text" id="expense-description" placeholder="Example: Hotel" maxlength="100" required>
-
-                <label for="expense-amount">Amount (₹)</label>
-
-                <input type="number" id="expense-amount" placeholder="Example: 3000" min="0.01" max="10000000"
-                    step="0.01" required>
-
-                <label for="expense-payer">Paid by</label>
-
-                <select id="expense-payer" required>
-                    <option value="">Select a member</option>
-                </select>
-
-                <fieldset>
-                    <legend>Shared by</legend>
-
-                    <p>Select everyone who shares this expense.</p>
-
-                    <div id="expense-participants"></div>
-                </fieldset>
-
-                <button type="submit">Add expense</button>
-            </form>
-
-            <p id="expense-message" role="status"></p>
-        </section>
-
-        <section class="card" aria-labelledby="history-heading">
-            <h2 id="history-heading">Expense history</h2>
-
-            <p>
-                Total expenses:
-                <strong id="expense-total">₹0.00</strong>
-            </p>
-
-            <p id="no-expenses">No expenses added yet.</p>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">Description</th>
-                            <th scope="col">Amount</th>
-                            <th scope="col">Paid by</th>
-                            <th scope="col">Shared by</th>
-                            <th scope="col">Action</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="expense-list"></tbody>
-                </table>
+                        <div class="mt-3">
+                            <a href="trip-details.html?id={{trip.id}}" class="btn btn-outline-primary btn-sm w-100 fw-semibold" ng-click="$event.stopPropagation()">
+                                Open Trip <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
-    </main>
-</body>
 
+        <!-- ===================================================================
+             VIEW 2: TRIP DETAILS VIEW (When selectedTrip is active)
+             =================================================================== -->
+        <section id="trip-view" ng-if="selectedTrip" ng-controller="TripController" ng-init="init(selectedTrip)">
+            
+            <!-- Breadcrumb Navigation -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none" ng-click="$parent.selectedTrip = null">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">{{trip.name || 'Trip Details'}}</li>
+                </ol>
+            </nav>
+
+            <!-- Trip Hero Banner -->
+            <div class="trip-banner">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-7">
+                        <div class="d-inline-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-white text-dark fw-bold px-2 py-1">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{trip.destination}}
+                            </span>
+                            <span class="badge bg-primary-subtle text-white fw-medium px-2 py-1" ng-if="trip.start_date">
+                                <i class="bi bi-calendar-event me-1"></i> {{trip.start_date | readableDate}} - {{trip.end_date | readableDate}}
+                            </span>
+                        </div>
+                        <h1 class="trip-banner-title mb-2">{{trip.name}}</h1>
+                        <p class="trip-banner-dest mb-0">
+                            Shared vacation spending tracker with {{members.length}} participating members.
+                        </p>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="trip-stat-box">
+                                    <div class="trip-stat-label">Total Spent</div>
+                                    <div class="trip-stat-value font-monospace">{{trip.total_expenses_rupees | inr}}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="trip-stat-box">
+                                    <div class="trip-stat-label">Members</div>
+                                    <div class="trip-stat-value">{{members.length}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="card-modern p-2 mb-4">
+                <ul class="nav nav-pills nav-pills-custom flex-nowrap overflow-auto gap-2">
+                    <li class="nav-item">
+                        <button class="nav-link" ng-class="{'active': activeTab === 'expenses'}" ng-click="setTab('expenses')">
+                            <i class="bi bi-receipt me-1"></i> Expenses
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" ng-class="{'active': activeTab === 'balances'}" ng-click="setTab('balances')">
+                            <i class="bi bi-calculator me-1"></i> Balances & Settlements
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" ng-class="{'active': activeTab === 'reports'}" ng-click="setTab('reports')">
+                            <i class="bi bi-pie-chart me-1"></i> Reports & Charts
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" ng-class="{'active': activeTab === 'members'}" ng-click="setTab('members')">
+                            <i class="bi bi-people me-1"></i> Members ({{members.length}})
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ===============================================================
+                 TAB 1: EXPENSES MANAGEMENT
+                 =============================================================== -->
+            <div ng-show="activeTab === 'expenses'" ng-controller="ExpenseController">
+                
+                <!-- Action Header & Search Filters -->
+                <div class="card-modern p-3 mb-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" placeholder="Search expenses..." ng-model="filters.search" ng-change="loadExpenses()">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" ng-model="filters.category" ng-change="loadExpenses()">
+                                <option value="">All Categories</option>
+                                <option ng-repeat="cat in categories" value="{{cat}}">{{cat}}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" ng-model="filters.payer_id" ng-change="loadExpenses()">
+                                <option value="">All Payers</option>
+                                <option ng-repeat="m in $parent.members" value="{{m.id}}">{{m.name}}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" ng-model="filters.start_date" ng-change="loadExpenses()" title="From Date">
+                        </div>
+                        <div class="col-md-3 d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" ng-click="resetFilters()" title="Reset Filters">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button type="button" class="btn btn-primary-gradient w-100 fw-semibold" ng-click="openAddExpenseModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add Expense
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expenses List Table -->
+                <div class="card-modern overflow-hidden">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                        <h2 class="h6 fw-bold mb-0 text-dark">
+                            <i class="bi bi-receipt-cutoff me-2 text-primary"></i> Expense History
+                        </h2>
+                        <span class="badge bg-light text-dark border">
+                            Showing {{expenses.length}} record(s) • Total: <strong class="font-monospace">{{totalFilteredExpenses | inr}}</strong>
+                        </span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Paid By</th>
+                                    <th>Shared By</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center" style="width: 120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loadingExpenses">
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                        <span class="text-muted ms-2">Loading expense history...</span>
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loadingExpenses && expenses.length === 0">
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="bi bi-receipt text-muted fs-1 d-block mb-2"></i>
+                                        <p class="text-muted mb-2">No expenses found matching the selected criteria.</p>
+                                        <button type="button" class="btn btn-sm btn-primary-gradient" ng-click="openAddExpenseModal()">
+                                            Add First Expense
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="exp in expenses track by exp.id" ng-if="!loadingExpenses">
+                                    <td>
+                                        <span class="text-muted small">{{exp.expense_date | readableDate}}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{exp.description}}</div>
+                                        <span class="badge bg-light text-secondary border small" ng-if="exp.split_type === 'custom'">Custom Split</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-category cat-{{exp.category | lowercase}}">
+                                            {{exp.category}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold text-primary"><i class="bi bi-person-fill me-1"></i>{{exp.payer_name}}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <span class="badge bg-light text-dark border small" ng-repeat="s in exp.shares" title="Share: {{s.share_rupees | inr}}">
+                                                {{s.member_name}} <span class="text-muted">({{s.share_rupees | inr}})</span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="fw-bold text-dark font-monospace fs-6">{{exp.amount_rupees | inr}}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-secondary" ng-click="openEditExpenseModal(exp)" title="Edit Expense">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" ng-click="confirmDeleteExpense(exp)" title="Delete Expense">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD / EDIT EXPENSE MODAL WITH LIVE SPLIT PREVIEW -->
+                <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                            <div class="modal-header border-bottom bg-light">
+                                <h3 class="modal-title h5 fw-bold" id="expenseModalLabel">
+                                    <i class="bi bi-receipt-cutoff text-primary me-2"></i>
+                                    {{isEditingExpense ? 'Edit Expense' : 'Add New Expense'}}
+                                </h3>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <form ng-submit="saveExpense()">
+                                    <div class="row g-3">
+                                        <!-- Description -->
+                                        <div class="col-md-7">
+                                            <label class="form-label" for="exp-desc">Description <span class="text-danger">*</span></label>
+                                            <input type="text" id="exp-desc" class="form-control" placeholder="e.g. Seafood Dinner at Shack" ng-model="expenseForm.description" required maxlength="150">
+                                        </div>
+                                        <!-- Amount -->
+                                        <div class="col-md-5">
+                                            <label class="form-label" for="exp-amt">Total Amount (₹) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-white fw-bold">₹</span>
+                                                <input type="number" id="exp-amt" step="0.01" min="0.01" class="form-control font-monospace fw-bold" placeholder="0.00" ng-model="expenseForm.amount" ng-change="calculateSplitPreview()" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Category -->
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="exp-cat">Category <span class="text-danger">*</span></label>
+                                            <select id="exp-cat" class="form-select" ng-model="expenseForm.category" required>
+                                                <option ng-repeat="cat in categories" value="{{cat}}">{{cat}}</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Date -->
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="exp-date">Date <span class="text-danger">*</span></label>
+                                            <input type="date" id="exp-date" class="form-control" ng-model="expenseForm.expense_date" required>
+                                        </div>
+
+                                        <!-- Payer -->
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="exp-payer">Paid By <span class="text-danger">*</span></label>
+                                            <select id="exp-payer" class="form-select fw-semibold" ng-model="expenseForm.payer_member_id" required>
+                                                <option ng-repeat="m in $parent.members" value="{{m.id}}">{{m.name}}</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Split Type Selection -->
+                                        <div class="col-12 mt-4">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label mb-0 fw-bold">How should this expense be split?</label>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <input type="radio" class="btn-check" name="splitType" id="splitEqual" value="equal" ng-model="expenseForm.split_type" ng-change="calculateSplitPreview()">
+                                                    <label class="btn btn-outline-primary" for="splitEqual">Equal Split</label>
+
+                                                    <input type="radio" class="btn-check" name="splitType" id="splitCustom" value="custom" ng-model="expenseForm.split_type" ng-change="calculateSplitPreview()">
+                                                    <label class="btn btn-outline-primary" for="splitCustom">Custom Split</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Participating Members Checkbox List -->
+                                        <div class="col-12">
+                                            <div class="split-preview-box">
+                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                    <span class="fw-semibold small text-muted text-uppercase">Select Participating Members</span>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-link text-decoration-none p-0 me-2" ng-click="toggleAllParticipants(true)">Select All</button>
+                                                        <button type="button" class="btn btn-link text-decoration-none p-0 text-muted" ng-click="toggleAllParticipants(false)">Clear</button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-2">
+                                                    <div class="col-md-6" ng-repeat="m in $parent.members">
+                                                        <div class="split-pill" ng-class="{'border-primary bg-primary-subtle': expenseForm.participantsMap[m.id].selected}">
+                                                            <div class="form-check mb-0">
+                                                                <input class="form-check-input" type="checkbox" id="part-{{m.id}}" ng-model="expenseForm.participantsMap[m.id].selected" ng-change="calculateSplitPreview()">
+                                                                <label class="form-check-label fw-medium ms-1" for="part-{{m.id}}">{{m.name}}</label>
+                                                            </div>
+
+                                                            <!-- Custom Split Input Box -->
+                                                            <div ng-if="expenseForm.split_type === 'custom' && expenseForm.participantsMap[m.id].selected" class="input-group input-group-sm" style="max-width: 130px;">
+                                                                <span class="input-group-text bg-white px-2">₹</span>
+                                                                <input type="number" step="0.01" min="0.01" class="form-control font-monospace px-2" placeholder="0.00" ng-model="expenseForm.participantsMap[m.id].custom_amount" ng-change="calculateSplitPreview()">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- REAL-TIME LIVE EXPENSE SPLIT PREVIEW -->
+                                                <div class="mt-4 pt-3 border-top">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="fw-bold small text-dark">
+                                                            <i class="bi bi-eye-fill text-primary me-1"></i> Live Expense Split Preview
+                                                        </div>
+                                                        <span class="badge" ng-class="splitPreview.isValid ? 'bg-success' : 'bg-danger'">
+                                                            {{splitPreview.isValid ? 'Valid Split' : 'Attention Needed'}}
+                                                        </span>
+                                                    </div>
+
+                                                    <p class="small mb-3" ng-class="splitPreview.isValid ? 'text-success' : 'text-danger'">
+                                                        <i class="bi" ng-class="splitPreview.isValid ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+                                                        {{splitPreview.validationMessage}}
+                                                    </p>
+
+                                                    <div class="d-flex flex-wrap gap-2" ng-if="splitPreview.shares.length > 0">
+                                                        <div class="badge bg-white text-dark border p-2" ng-repeat="s in splitPreview.shares">
+                                                            <strong>{{s.name}}:</strong>
+                                                            <span class="font-monospace text-primary ms-1">{{s.share_rupees | inr}}</span>
+                                                            <span class="badge bg-warning-subtle text-dark ms-1 small" ng-if="s.hasRemainderPaisa" title="Fair paisa remainder allocation">+1p</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer border-top mt-4 px-0 pb-0">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary-gradient px-4" ng-disabled="!splitPreview.isValid">
+                                            <i class="bi bi-check2-circle me-1"></i> {{isEditingExpense ? 'Update Expense' : 'Save Expense'}}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELETE EXPENSE CONFIRMATION MODAL -->
+                <div class="modal fade" id="deleteExpenseModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-body text-center p-4">
+                                <div class="text-danger mb-3"><i class="bi bi-exclamation-circle fs-1"></i></div>
+                                <h3 class="h6 fw-bold mb-2">Delete Expense?</h3>
+                                <p class="text-muted small mb-4">Are you sure you want to delete "{{expenseToDelete.description}}"?</p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger btn-sm px-3" ng-click="executeDeleteExpense()">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===============================================================
+                 TAB 2: BALANCES & DEBT SIMPLIFICATION SETTLEMENTS
+                 =============================================================== -->
+            <div ng-show="activeTab === 'balances'" ng-controller="SettlementController">
+                
+                <!-- Zero-Sum Verification Bar -->
+                <div class="card-modern p-3 mb-4 bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-success fs-5"></i>
+                        <div>
+                            <span class="fw-bold text-dark">Financial Integrity: </span>
+                            <span class="text-success fw-semibold">All balances sum strictly to ₹0.00</span>
+                        </div>
+                    </div>
+                    <div class="badge bg-light text-secondary border px-3 py-2 font-monospace">
+                        Ledger Sum: {{balanceSumPaise | paiseToInr}}
+                    </div>
+                </div>
+
+                <!-- Member Balance Summary Table -->
+                <div class="card-modern mb-4 overflow-hidden">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                        <h2 class="h6 fw-bold mb-0 text-dark">
+                            <i class="bi bi-wallet2 me-2 text-primary"></i> Member Balance Breakdown
+                        </h2>
+                        <span class="badge bg-light text-muted border">Formula: Paid - Share + Sent - Received</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th class="text-end">Total Paid</th>
+                                    <th class="text-end">Expense Share</th>
+                                    <th class="text-end">Repayments Sent</th>
+                                    <th class="text-end">Repayments Received</th>
+                                    <th class="text-end">Net Balance</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loadingBalances">
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                        <span class="text-muted ms-2">Calculating member balances...</span>
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="mb in memberBalances track by mb.id" ng-if="!loadingBalances">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle" style="width:32px; height:32px; font-size:0.8rem;">
+                                                {{mb.name.charAt(0).toUpperCase()}}
+                                            </div>
+                                            <span class="fw-bold text-dark">{{mb.name}}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end font-monospace">{{mb.paid_rupees | inr}}</td>
+                                    <td class="text-end font-monospace text-muted">{{mb.share_rupees | inr}}</td>
+                                    <td class="text-end font-monospace text-info">{{mb.repayments_sent_rupees | inr}}</td>
+                                    <td class="text-end font-monospace text-secondary">{{mb.repayments_received_rupees | inr}}</td>
+                                    <td class="text-end font-monospace fw-bold" ng-class="{'text-success': mb.balance_paise > 0, 'text-danger': mb.balance_paise < 0, 'text-muted': mb.balance_paise === 0}">
+                                        {{mb.balance_rupees | inr}}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge badge-balance-pos" ng-if="mb.balance_paise > 0">
+                                            <i class="bi bi-arrow-down-left me-1"></i> Gets back {{mb.balance_rupees | inr}}
+                                        </span>
+                                        <span class="badge badge-balance-neg" ng-if="mb.balance_paise < 0">
+                                            <i class="bi bi-arrow-up-right me-1"></i> Owes {{ (mb.balance_rupees * -1) | inr}}
+                                        </span>
+                                        <span class="badge badge-balance-zero" ng-if="mb.balance_paise === 0">
+                                            <i class="bi bi-check-circle me-1"></i> Settled
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Automated Settlement Suggestions (Debt Simplification) -->
+                <div class="card-modern p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h2 class="h6 fw-bold mb-1 text-dark">
+                                <i class="bi bi-lightning-charge-fill text-warning me-2"></i> Automated Settlement Suggestions
+                            </h2>
+                            <p class="text-muted small mb-0">Minimum transactions needed to settle all debts in the group.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" ng-click="openRecordPaymentModal(null)">
+                            <i class="bi bi-cash-stack me-1"></i> Record Custom Payment
+                        </button>
+                    </div>
+
+                    <!-- Fully Settled Notice -->
+                    <div class="alert alert-success border-0 d-flex align-items-center gap-3 p-3" ng-if="isFullySettled || suggestions.length === 0">
+                        <i class="bi bi-check-circle-fill fs-3 text-success"></i>
+                        <div>
+                            <div class="fw-bold">All Settled Up!</div>
+                            <div class="small text-muted">There are no outstanding debts between group members. Everyone is settled.</div>
+                        </div>
+                    </div>
+
+                    <!-- List of Suggestions -->
+                    <div class="row g-3" ng-if="suggestions.length > 0">
+                        <div class="col-md-6" ng-repeat="sug in suggestions">
+                            <div class="settlement-card d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <strong class="text-danger">{{sug.sender_name}}</strong>
+                                        <i class="bi bi-arrow-right text-muted"></i>
+                                        <strong class="text-success">{{sug.receiver_name}}</strong>
+                                    </div>
+                                    <div class="text-muted small">
+                                        Amount: <span class="font-monospace fw-bold text-dark fs-6">{{sug.amount_rupees | inr}}</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary-gradient px-3" ng-click="openRecordPaymentModal(sug)">
+                                    <i class="bi bi-check2 me-1"></i> Record Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settlement History -->
+                <div class="card-modern overflow-hidden">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                        <h2 class="h6 fw-bold mb-0 text-dark">
+                            <i class="bi bi-clock-history me-2 text-primary"></i> Repayment History
+                        </h2>
+                        <span class="badge bg-light text-muted border">{{settlementsHistory.length}} payment(s)</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Paid By (Sender)</th>
+                                    <th>Paid To (Receiver)</th>
+                                    <th>Notes</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center" style="width: 100px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="settlementsHistory.length === 0">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        No repayments recorded yet for this trip.
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="sh in settlementsHistory track by sh.id">
+                                    <td><span class="text-muted small">{{sh.payment_date | readableDate}}</span></td>
+                                    <td><span class="fw-semibold text-danger">{{sh.sender_name}}</span></td>
+                                    <td><span class="fw-semibold text-success">{{sh.receiver_name}}</span></td>
+                                    <td><span class="text-muted small">{{sh.notes || '—'}}</span></td>
+                                    <td class="text-end font-monospace fw-bold">{{sh.amount_rupees | inr}}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Completed</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" ng-click="confirmReverseSettlement(sh)" title="Reverse / Delete Payment">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reverse
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RECORD PAYMENT MODAL -->
+                <div class="modal fade" id="recordPaymentModal" tabindex="-1" aria-labelledby="recordPaymentLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                            <div class="modal-header border-bottom bg-light">
+                                <h3 class="modal-title h5 fw-bold" id="recordPaymentLabel">
+                                    <i class="bi bi-cash-stack text-success me-2"></i> Record Repayment
+                                </h3>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <form ng-submit="recordPayment()">
+                                    <div class="mb-3">
+                                        <label class="form-label">Who paid? (Sender / Debtor) <span class="text-danger">*</span></label>
+                                        <select class="form-select" ng-model="paymentForm.sender_member_id" required>
+                                            <option value="">Select Member</option>
+                                            <option ng-repeat="m in $parent.members" value="{{m.id}}">{{m.name}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Who received? (Receiver / Creditor) <span class="text-danger">*</span></label>
+                                        <select class="form-select" ng-model="paymentForm.receiver_member_id" required>
+                                            <option value="">Select Member</option>
+                                            <option ng-repeat="m in $parent.members" value="{{m.id}}">{{m.name}}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white fw-bold">₹</span>
+                                            <input type="number" step="0.01" min="0.01" class="form-control font-monospace fw-bold" placeholder="0.00" ng-model="paymentForm.amount" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Payment Date</label>
+                                        <input type="date" class="form-control" ng-model="paymentForm.payment_date" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <input type="text" class="form-control" placeholder="e.g. UPI / Google Pay / Cash" ng-model="paymentForm.notes" maxlength="255">
+                                    </div>
+                                    <div class="modal-footer border-top px-0 pb-0 mt-4">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success px-4 fw-semibold">
+                                            <i class="bi bi-check2-circle me-1"></i> Save Payment
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REVERSE SETTLEMENT CONFIRMATION MODAL -->
+                <div class="modal fade" id="reversePaymentModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-body text-center p-4">
+                                <div class="text-warning mb-3"><i class="bi bi-arrow-counterclockwise fs-1"></i></div>
+                                <h3 class="h6 fw-bold mb-2">Reverse Payment?</h3>
+                                <p class="text-muted small mb-4">
+                                    Reverse repayment of <strong>{{settlementToReverse.amount_rupees | inr}}</strong> from {{settlementToReverse.sender_name}} to {{settlementToReverse.receiver_name}}? Member balances will be updated.
+                                </p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger btn-sm px-3" ng-click="executeReverseSettlement()">Reverse</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===============================================================
+                 TAB 3: REPORTS & ANALYTICS
+                 =============================================================== -->
+            <div ng-show="activeTab === 'reports'" ng-controller="ReportController">
+                <div class="row g-4">
+                    <!-- Category Doughnut Chart -->
+                    <div class="col-lg-6">
+                        <div class="card-modern p-4 h-100">
+                            <h2 class="h6 fw-bold mb-3 text-dark">
+                                <i class="bi bi-pie-chart-fill text-primary me-2"></i> Spending by Category
+                            </h2>
+                            <div class="chart-container d-flex align-items-center justify-content-center">
+                                <canvas id="categoryChartCanvas"></canvas>
+                                <div ng-if="categoryBreakdown.length === 0" class="text-muted text-center py-5">
+                                    No category data available yet.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown Table & Summary -->
+                    <div class="col-lg-6">
+                        <div class="card-modern p-4 h-100">
+                            <h2 class="h6 fw-bold mb-3 text-dark">
+                                <i class="bi bi-bar-chart-line-fill text-indigo me-2"></i> Category Summary
+                            </h2>
+                            <div class="table-responsive">
+                                <table class="table table-custom align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th class="text-center">Count</th>
+                                            <th class="text-end">Total Spent</th>
+                                            <th class="text-end">Share (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-if="categoryBreakdown.length === 0">
+                                            <td colspan="4" class="text-center py-4 text-muted">No expenses recorded yet.</td>
+                                        </tr>
+                                        <tr ng-repeat="cat in categoryBreakdown">
+                                            <td>
+                                                <span class="badge-category cat-{{cat.category | lowercase}}">
+                                                    {{cat.category}}
+                                                </span>
+                                            </td>
+                                            <td class="text-center font-monospace">{{cat.count}}</td>
+                                            <td class="text-end font-monospace fw-bold">{{cat.total_rupees | inr}}</td>
+                                            <td class="text-end font-monospace text-muted">{{cat.percentage}}%</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded bg-light border" ng-if="topCategory">
+                                <div class="text-muted small text-uppercase fw-semibold">Highest Spending Category</div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <span class="h5 fw-bold text-dark mb-0">{{topCategory.category}}</span>
+                                    <span class="badge bg-primary fs-6">{{topCategory.total_rupees | inr}} ({{topCategory.percentage}}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===============================================================
+                 TAB 4: MEMBERS MANAGEMENT
+                 =============================================================== -->
+            <div ng-show="activeTab === 'members'">
+                <div class="row g-4">
+                    <!-- Add Member Box -->
+                    <div class="col-md-5">
+                        <div class="card-modern p-4">
+                            <h2 class="h6 fw-bold mb-3 text-dark">
+                                <i class="bi bi-person-plus-fill text-primary me-2"></i> Add New Member
+                            </h2>
+                            <form ng-submit="addMember()">
+                                <div class="mb-3">
+                                    <label class="form-label" for="new-member-name">Member Name <span class="text-danger">*</span></label>
+                                    <input type="text" id="new-member-name" class="form-control" placeholder="e.g. Rohan" ng-model="newMemberName" required maxlength="50">
+                                    <div class="form-text">Must be unique within this trip.</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary-gradient w-100 fw-semibold">
+                                    <i class="bi bi-plus-lg me-1"></i> Add to Trip
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Members List -->
+                    <div class="col-md-7">
+                        <div class="card-modern overflow-hidden">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white">
+                                <h2 class="h6 fw-bold mb-0 text-dark">
+                                    <i class="bi bi-people-fill me-2 text-primary"></i> Current Members ({{members.length}})
+                                </h2>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center p-3" ng-repeat="m in members track by m.id">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-circle">
+                                            {{m.name.charAt(0).toUpperCase()}}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">{{m.name}}</div>
+                                            <div class="text-muted small">
+                                                Paid: {{m.expenses_paid_count}} exp • Shares: {{m.shares_count}} • Settlements: {{m.settlements_count}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary" ng-click="openEditMember(m)" title="Edit Name">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" ng-click="confirmDeleteMember(m)" title="Remove Member">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EDIT MEMBER MODAL -->
+                <div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-header border-bottom bg-light">
+                                <h3 class="modal-title h6 fw-bold">Edit Member Name</h3>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-3">
+                                <form ng-submit="updateMember()">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="edit-m-name">Member Name</label>
+                                        <input type="text" id="edit-m-name" class="form-control" ng-model="editMemberData.name" required maxlength="50">
+                                    </div>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary btn-sm px-3">Update</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DELETE MEMBER MODAL -->
+                <div class="modal fade" id="deleteMemberModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-body text-center p-4">
+                                <div class="text-danger mb-3"><i class="bi bi-exclamation-triangle fs-1"></i></div>
+                                <h3 class="h5 fw-bold mb-2">Remove Member?</h3>
+                                <p class="text-muted small mb-4">
+                                    Are you sure you want to remove <strong>{{memberToDelete.name}}</strong>?
+                                    <br>
+                                    <span class="text-danger">Note: Members with existing financial records (paid expenses, expense shares, or settlements) cannot be removed until those records are cleared.</span>
+                                </p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger px-4" ng-click="executeDeleteMember()">Remove Member</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ===================================================================
+         GLOBAL MODALS: CREATE & EDIT TRIP
+         =================================================================== -->
+    <!-- New Trip Modal -->
+    <div class="modal fade" id="newTripModal" tabindex="-1" aria-labelledby="newTripLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                <div class="modal-header border-bottom bg-light">
+                    <h3 class="modal-title h5 fw-bold" id="newTripLabel">
+                        <i class="bi bi-airplane-engines text-primary me-2"></i> Create New Trip
+                    </h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form ng-submit="createTrip()">
+                        <div class="mb-3">
+                            <label class="form-label" for="new-trip-name">Trip Name <span class="text-danger">*</span></label>
+                            <input type="text" id="new-trip-name" class="form-control" placeholder="e.g. Goa Trip" ng-model="newTrip.name" required maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="new-trip-dest">Destination <span class="text-danger">*</span></label>
+                            <input type="text" id="new-trip-dest" class="form-control" placeholder="e.g. Goa, India" ng-model="newTrip.destination" required maxlength="100">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="new-trip-start">Start Date</label>
+                                <input type="date" id="new-trip-start" class="form-control" ng-model="newTrip.start_date">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="new-trip-end">End Date</label>
+                                <input type="date" id="new-trip-end" class="form-control" ng-model="newTrip.end_date">
+                            </div>
+                        </div>
+
+                        <!-- Initial Members Field -->
+                        <div class="mb-3">
+                            <label class="form-label">Add Initial Friends (Optional)</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" placeholder="Friend name (e.g. Neev)" ng-model="newTrip.memberInput" ng-keydown="onMemberKeydown($event)">
+                                <button type="button" class="btn btn-outline-primary" ng-click="addInitialMember()">Add</button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1" ng-if="newTrip.members.length > 0">
+                                <span class="badge bg-light text-dark border p-2" ng-repeat="m in newTrip.members track by $index">
+                                    {{m}} <i class="bi bi-x ms-1 text-danger cursor-pointer" ng-click="removeInitialMember($index)"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-top px-0 pb-0 mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-gradient px-4 fw-semibold">
+                                Create Trip
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Trip Modal -->
+    <div class="modal fade" id="editTripModal" tabindex="-1" aria-labelledby="editTripLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: var(--radius-lg);">
+                <div class="modal-header border-bottom bg-light">
+                    <h3 class="modal-title h5 fw-bold" id="editTripLabel">
+                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Trip
+                    </h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form ng-submit="updateTrip()">
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-trip-name">Trip Name <span class="text-danger">*</span></label>
+                            <input type="text" id="edit-trip-name" class="form-control" ng-model="editTripData.name" required maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="edit-trip-dest">Destination <span class="text-danger">*</span></label>
+                            <input type="text" id="edit-trip-dest" class="form-control" ng-model="editTripData.destination" required maxlength="100">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="edit-trip-start">Start Date</label>
+                                <input type="date" id="edit-trip-start" class="form-control" ng-model="editTripData.start_date">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="edit-trip-end">End Date</label>
+                                <input type="date" id="edit-trip-end" class="form-control" ng-model="editTripData.end_date">
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top px-0 pb-0 mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-gradient px-4 fw-semibold">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Trip Confirmation Modal -->
+    <div class="modal fade" id="deleteTripModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center p-4">
+                    <div class="text-danger mb-3"><i class="bi bi-trash3-fill fs-1"></i></div>
+                    <h3 class="h5 fw-bold mb-2">Delete Trip?</h3>
+                    <p class="text-muted small mb-4">
+                        Are you sure you want to delete <strong>{{tripToDelete.name}}</strong>? All expenses, member shares, and settlements belonging to this trip will be permanently removed.
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger px-4" ng-click="executeDeleteTrip()">Delete Trip</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <!-- Application AngularJS Scripts -->
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/services/apiService.js"></script>
+    <script src="assets/js/controllers/DashboardController.js"></script>
+    <script src="assets/js/controllers/TripController.js"></script>
+    <script src="assets/js/controllers/ExpenseController.js"></script>
+    <script src="assets/js/controllers/SettlementController.js"></script>
+    <script src="assets/js/controllers/ReportController.js"></script>
+</body>
 </html>
